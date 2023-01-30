@@ -8,11 +8,16 @@ import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
 import com.mongodb.ConnectionString;
 import com.mongodb.MongoClientSettings;
 import com.mongodb.client.MongoClients;
-import com.mongodb.client.MongoDatabase;
 import com.sqshq.benchmark.config.Configuration;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.time.Duration;
+import java.time.Instant;
+import java.util.Scanner;
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ThreadLocalRandom;
 import java.util.concurrent.TimeUnit;
 import org.bson.BsonArray;
 import org.bson.BsonDocument;
@@ -20,7 +25,9 @@ import org.bson.BsonString;
 
 public class Benchmark {
 
-  public static void main(String[] args) throws IOException {
+  // arg0 - full path to yml config
+  // arg1 - mongodb connection string
+  public static void main(String[] args) throws IOException, InterruptedException {
 
     var mapper =
         new ObjectMapper(new YAMLFactory())
@@ -28,50 +35,69 @@ public class Benchmark {
 
     var reader =
         Files.newBufferedReader(
-            Path.of("/Users/sqshq/OSS/benchmark/src/main/java/com/sqshq/benchmark/config.yml"));
+            Path.of(args[0]));
 
+    var mongoClient = MongoClients.create(MongoClientSettings.builder()
+        .applyConnectionString(new ConnectionString(args[1])).build());
     var config = mapper.readValue(reader, Configuration.class);
-    System.out.println(config);
+    var metrics = new MetricRegistry();
 
-    var pipeline =
-        BsonArray.parse(
-            config.Actors()
-                .get(0)
-                .Phases()
-                .get(0)
-                .Operations()
-                .get(0)
-                .OperationCommand()
-                .pipeline()
-                .toString());
+    var actor = config.Actors().get(0); // support only single actor for now
 
-    var collectionName =
-        config.Actors().get(0).Phases().get(0).Operations().get(0).OperationCommand().aggregate();
+    var pool = Executors.newFixedThreadPool(actor.Threads());
 
-    ConnectionString connectionString = new ConnectionString("...");
-    var settings = MongoClientSettings.builder().applyConnectionString(connectionString).build();
-    var mongoClient = MongoClients.create(settings);
-    MongoDatabase database = mongoClient.getDatabase("test");
+    for (var phase : actor.Phases()) {
 
-    var registry = new MetricRegistry();
+      var latch = new CountDownLatch(actor.Threads());
 
-    var timer = registry.timer("query7");
-    var context = timer.time();
-    var command =
-        new BsonDocument()
-            .append("aggregate", new BsonString(collectionName))
-            .append("pipeline", pipeline)
-            .append("cursor", new BsonDocument());
+      for (int i = 0; i < actor.Threads(); i++) {
+        System.out.printf("Starting thread %s %n", i);
+        pool.submit(() -> {
 
-    var result = database.runCommand(command);
-    context.stop();
+          int minutes = new Scanner(phase.Duration()).useDelimiter("\\D+").nextInt();
 
-    ConsoleReporter.forRegistry(registry)
+          if (!phase.Duration().contains("minute")) {
+            throw new IllegalArgumentException("Duration is expected to be only in minutes");
+          }
+
+          var endTime = Instant.now().plus(Duration.ofMinutes(minutes));
+
+          while (Instant.now().isBefore(endTime)) {
+            var operation = phase.Operations().get(0); // support only single operation for now
+            var database = mongoClient.getDatabase(phase.Database());
+            var collection = operation.OperationCommand().aggregate();
+
+            var pipeline =
+                BsonArray.parse(operation.OperationCommand().pipeline().toString());
+
+            var timer = metrics.timer(operation.OperationMetricsName());
+            var context = timer.time();
+            var command =
+                new BsonDocument()
+                    .append("aggregate", new BsonString(collection))
+                    .append("pipeline", pipeline)
+                    .append("cursor", new BsonDocument());
+            var result = database.runCommand(command, BsonDocument.class);
+            if (ThreadLocalRandom.current().nextInt(0, 100) == 50) {
+              System.out.printf("One of the queries result size was %s %n",
+                  result.getDocument("cursor").getArray("firstBatch").size());
+            }
+            context.stop();
+          }
+
+          latch.countDown();
+        });
+      }
+
+      latch.await();
+    }
+
+    ConsoleReporter.forRegistry(metrics)
         .convertRatesTo(TimeUnit.SECONDS)
         .convertDurationsTo(TimeUnit.MILLISECONDS)
         .build()
         .report();
 
-    System.out.println(result);
+    pool.shutdown();
   }
 }

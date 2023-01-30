@@ -1,10 +1,497 @@
 SchemaVersion: "2018-07-01"
 Actors:
-  - Name: "sequential.query"
+  - Name: "query"
     Type: RunCommand
     Threads: 1
     Phases:
-      - Duration: "5 minutes"
+      - Duration: "1 minute"
+        Database: test
+        Operations:
+          - OperationMetricsName: query1
+            OperationName: RunCommand
+            OperationIsQuiet: true
+            OperationCommand:
+              aggregate: person2Company
+              cursor:
+                batchSize: 101
+              pipeline:
+                - $search:
+                    index: default
+                    count:
+                      type: lowerBound
+                    returnStoredSource: true
+                    compound:
+                      must:
+                        - range:
+                            path: company.companyDetails.revenue
+                            gte: 100000
+                        - text:
+                            path: address.className
+                            query: Country.Canada
+                        - range:
+                            path: confidenceScore
+                            gte: 85
+                            lte: 99
+                      should:
+                        - text:
+                            path: company.companyDetails.doziIndustries
+                            query:
+                              - agriculture
+                              - bizservice
+                              - construction
+                              - consumerservices
+                              - education
+                              - energy
+                              - healthservices
+                              - conglomerate
+                              - hospitality
+                              - hospitals
+                              - insurance
+                              - legal
+                              - mfg
+                              - media
+                              - mm
+                              - orgs
+                              - realestate
+                              - retail
+                              - software
+                              - telecom
+                              - transportation
+                        - text:
+                            path: managementLevel
+                            query:
+                              - VP-LEVEL
+                              - Director
+                        - text:
+                            path: jobFunction.jobFunctionId
+                            query:
+                              - '1.0'
+                              - '1.3'
+                              - '1.15'
+                              - '4.9'
+                      filter:
+                        - text:
+                            path: company.companyDetails.doziIndustries
+                            query:
+                              - agriculture
+                              - bizservice
+                              - construction
+                              - consumerservices
+                              - education
+                              - energy
+                              - healthservices
+                              - conglomerate
+                              - hospitality
+                              - hospitals
+                              - insurance
+                              - legal
+                              - mfg
+                              - media
+                              - mm
+                              - orgs
+                              - realestate
+                              - retail
+                              - software
+                              - telecom
+                              - transportation
+                        - text:
+                            path: managementLevel
+                            query:
+                              - VP-LEVEL
+                              - Director
+                        - text:
+                            path: jobFunction.jobFunctionId
+                            query:
+                              - "1.0"
+                              - "1.3"
+                              - "1.15"
+                              - "4.9"
+                      score:
+                        function:
+                          multiply:
+                            - add:
+                                - multiply:
+                                    - path:
+                                        value: orgChartTier
+                                    - constant: 0.009524
+                                    - path:
+                                        value: orgChartTier
+                                    - constant: 0.009524
+                                    - path:
+                                        value: orgChartTier
+                                    - constant: 0.009524
+                                    - path:
+                                        value: orgChartTier
+                                    - constant: 0.009524
+                                - multiply:
+                                    - path:
+                                        value: company.companyDetails.revenue
+                                    - constant: 0.000003
+                                - multiply:
+                                    - score: relevance
+                                    - constant: 3
+                            - gauss:
+                                path:
+                                  value: validDateMS
+                                  undefined: 1
+                                origin: 1675109605847
+                                offset: 2592000000
+                                scale: 2592000000
+                                decay: 0.5
+                - $limit: 10
+                - $match:
+                    _id:
+                      $exists: true
+
+      - Duration: "1 minute"
+        Database: test
+        Operations:
+          - OperationMetricsName: query2
+            OperationName: RunCommand
+            OperationIsQuiet: true
+            OperationCommand:
+              aggregate: person2Company
+              cursor:
+                batchSize: 101
+              pipeline:
+                - $search:
+                    index: default
+                    returnStoredSource: true
+                    compound:
+                      must:
+                        - range:
+                            path: company.companyDetails.revenue
+                            gte: 250000
+                            lte: 700000
+                        - range:
+                            path: confidenceScore
+                            gte: 85
+                            lte: 99
+                        - text:
+                            path: jobFunction.name
+                            query: Accounting
+                        - text:
+                            path: jobFunction.department
+                            query: Finance
+                      filter:
+                        - text:
+                            path: address.className
+                            query:
+                              - Country.USA
+                              - MetroArea.USA
+                        - text:
+                            path: company.companyDetails.doziIndustries
+                            query:
+                              - agriculture
+                              - bizservice
+                              - consumerservices
+                              - energy
+                              - legal
+                              - mfg
+                              - media
+                              - software
+                              - telecom
+                              - transportation
+                        - text:
+                            path: managementLevel
+                            query:
+                              - C-Level
+                              - VP-LEVEL
+                              - Director
+                              - Manager
+                - $limit: 25
+                - $addFields:
+                    person_score:
+                      $meta: searchScore
+                - $sort:
+                    name.last: -1
+                    company.companyId: -1
+                - $match:
+                    _id:
+                      $exists: true
+
+      - Duration: "1 minute"
+        Database: test
+        Operations:
+          - OperationMetricsName: query3
+            OperationName: RunCommand
+            OperationIsQuiet: true
+            OperationCommand:
+              aggregate: person2Company
+              cursor:
+                batchSize: 101
+              pipeline:
+                - $search:
+                    index: default
+                    returnStoredSource: true
+                    compound:
+                      must:
+                        - text:
+                            path: address.className
+                            query: Country.Taiwan
+                        - range:
+                            path: confidenceScore
+                            gte: 85
+                            lte: 99
+                        - text:
+                            path: managementLevel
+                            query: C-Level
+                      filter:
+                        - text:
+                            path: company.companyDetails.doziIndustries
+                            query:
+                              - agriculture
+                              - bizservice
+                              - construction
+                              - consumerservices
+                              - education
+                              - energy
+                              - finance
+                              - healthservices
+                              - conglomerate
+                              - insurance
+                              - mfg
+                              - media
+                              - mm
+                              - realestate
+                              - retail
+                              - software
+                              - telecom
+                              - transportation
+                - $limit: 25
+                - $addFields:
+                    person_score:
+                      $meta: searchScore
+                - $sort:
+                    name.last: -1
+                    company.companyId: -1
+                - $match:
+                    _id:
+                      $exists: true
+
+      - Duration: "1 minute"
+        Database: test
+        Operations:
+          - OperationMetricsName: query4
+            OperationName: RunCommand
+            OperationIsQuiet: true
+            OperationCommand:
+              aggregate: person2Company
+              cursor:
+                batchSize: 101
+              pipeline:
+                - $search:
+                    index: default
+                    returnStoredSource: true
+                    compound:
+                      must:
+                        - range:
+                            path: confidenceScore
+                            gte: 85
+                            lte: 99
+                      should:
+                        - text:
+                            path: address.city
+                            query:
+                              - Houston
+                              - Pearland
+                      filter:
+                        - text:
+                            path: address.city
+                            query:
+                              - Houston
+                              - Pearland
+                      score:
+                        function:
+                          multiply:
+                            - add:
+                                - multiply:
+                                    - path:
+                                        value: orgChartTier
+                                    - constant: 0.009524
+                                    - path:
+                                        value: orgChartTier
+                                    - constant: 0.009524
+                                    - path:
+                                        value: orgChartTier
+                                    - constant: 0.009524
+                                    - path:
+                                        value: orgChartTier
+                                    - constant: 0.009524
+                                - multiply:
+                                    - path:
+                                        value: company.companyDetails.revenue
+                                    - constant: 0.000003
+                                - multiply:
+                                    - score: relevance
+                                    - constant: 3
+                            - gauss:
+                                path:
+                                  value: validDateMS
+                                  undefined: 1
+                                origin: 1675109605847
+                                offset: 2592000000
+                                scale: 2592000000
+                                decay: 0.5
+                - $limit: 25
+                - $addFields:
+                    person_score:
+                      $meta: searchScore
+                - $sort:
+                    person_score: -1
+                    company.companyId: -1
+                - $match:
+                    _id:
+                      $exists: true
+      - Duration: "1 minute"
+        Database: test
+        Operations:
+          - OperationMetricsName: query5
+            OperationName: RunCommand
+            OperationIsQuiet: true
+            OperationCommand:
+              aggregate: person2Company
+              cursor:
+                batchSize: 101
+              pipeline:
+                - $search:
+                    index: default
+                    returnStoredSource: true
+                    compound:
+                      must:
+                        - range:
+                            path: company.companyDetails.revenue
+                            gte: 5000
+                            lte: 100000
+                        - range:
+                            path: confidenceScore
+                            gte: 85
+                            lte: 99
+                      should:
+                        - phrase:
+                            path: resumes.title.value
+                            query:
+                              - Director of Engineering
+                              - Engineering Manager
+                              - Operations
+                              - Mechancial Engineer
+                              - Electrical Engineer
+                              - CTO
+                              - Process Engineer
+                              - Integration Engineer
+                      filter:
+                        - text:
+                            path: company.companyDetails.doziIndustries
+                            query:
+                              - mfg.aerospace
+                              - mfg.appliances
+                              - mfg.carparts
+                              - mfg.boat
+                              - mfg.building
+                              - mfg.computers
+                              - mfg.electronics
+                              - mfg.furniture
+                              - mfg.tools
+                              - mfg.industrialmachinery
+                              - mfg.car
+                              - mfg.photo
+                              - mfg.sport
+                              - mfg.telecom
+                              - mfg.testequipment
+                              - mfg.toys
+                        - text:
+                            path: managementLevel
+                            query:
+                              - Director
+                              - VP-Level
+                - $limit: 25
+                - $addFields:
+                    person_score:
+                      $meta: searchScore
+                - $sort:
+                    person_score: -1
+                    company.companyId: -1
+                - $match:
+                    _id:
+                      $exists: true
+      - Duration: "1 minute"
+        Database: test
+        Operations:
+          - OperationMetricsName: query6
+            OperationName: RunCommand
+            OperationIsQuiet: true
+            OperationCommand:
+              aggregate: person2Company
+              cursor:
+                batchSize: 101
+              pipeline:
+                - $search:
+                    index: default
+                    returnStoredSource: true
+                    compound:
+                      must:
+                        - text:
+                            path: company.companyDetails.technologies
+                            query: '799'
+                        - range:
+                            path: company.companyDetails.revenue
+                            gte: 1000000
+                        - range:
+                            path: confidenceScore
+                            gte: 85
+                            lte: 99
+                      filter:
+                        - text:
+                            path: address.className
+                            query:
+                              - State.USA.Ohio
+                              - State.USA.Oklahoma
+                              - State.USA.Oregon
+                              - State.USA.Pennsylvania
+                              - State.USA.RhodeIsland
+                              - State.USA.SouthCarolina
+                              - State.USA.SouthDakota
+                              - State.USA.Tennessee
+                              - State.USA.Utah
+                              - State.USA.Vermont
+                              - State.USA.Virginia
+                              - State.USA.Washington
+                              - State.USA.WestVirginia
+                        - text:
+                            path: company.companyDetails.doziIndustries
+                            query:
+                              - bizservice
+                        - text:
+                            path: managementLevel
+                            query:
+                              - C-Level
+                              - VP-Level
+                              - Director
+                              - Manager
+                        - text:
+                            path: jobFunction.name
+                            query:
+                              - Accounts
+                              - Accounting
+                              - Bookkeeping
+                              - Treasury
+                              - Finance
+                              - Financial
+                              - Purchasing
+                              - Procurement
+                              - Tax
+                              - Accountant
+                - $limit: 25
+                - $addFields:
+                    person_score:
+                      $meta: searchScore
+                - $sort:
+                    orgChartTier: -1
+                    company.companyId: -1
+                - $match:
+                    _id:
+                      $exists: true
+      - Duration: "1 minute"
         Database: test
         Operations:
           - OperationMetricsName: query7
@@ -1729,10 +2216,322 @@ Actors:
                                 path:
                                   value: validDateMS
                                   undefined: 1
-                                origin: 1675066754646
+                                origin: 1675109605847
                                 offset: 2592000000
                                 scale: 2592000000
                                 decay: 0.5
+                - $limit: 25
+                - $addFields:
+                    person_score:
+                      $meta: searchScore
+                - $sort:
+                    person_score: -1
+                    company.companyId: -1
+                - $match:
+                    _id:
+                      $exists: true
+
+      - Duration: "1 minute"
+        Database: test
+        Operations:
+          - OperationMetricsName: query8
+            OperationName: RunCommand
+            OperationIsQuiet: true
+            OperationCommand:
+              aggregate: person2Company
+              cursor:
+                batchSize: 101
+              pipeline:
+                - $search:
+                    index: default
+                    returnStoredSource: true
+                    compound:
+                      must:
+                        - range:
+                            path: company.companyDetails.revenue
+                            gte: 1000000
+                        - range:
+                            path: company.companyDetails.headcount
+                            gte: 50
+                        - range:
+                            path: confidenceScore
+                            gte: 85
+                            lte: 99
+                        - range:
+                            path: company.companyDetails.twoYearEmpGrowthScore
+                            gte: 50
+                      filter:
+                        - text:
+                            path: company.companyDetails.industry
+                            query:
+                              - Public
+                              - Private
+                              - Government
+                        - text:
+                            path: address.className
+                            query:
+                              - State.USA.Connecticut
+                              - State.USA.Florida
+                              - State.USA.Illinois
+                              - State.USA.Maine
+                              - State.USA.Massachusetts
+                              - State.USA.NewHampshire
+                              - State.USA.NewJersey
+                              - State.USA.NewYork
+                              - State.USA.Ohio
+                              - State.USA.Pennsylvania
+                              - State.USA.RhodeIsland
+                              - State.USA.Texas
+                              - MetroArea.USA.California.SanFrancisco
+                              - MetroArea.USA.Connecticut.Hartford
+                              - MetroArea.USA.Florida.Gainesville
+                              - MetroArea.USA.Florida.Jacksonville
+                              - MetroArea.USA.Florida.Miami
+                              - MetroArea.USA.Florida.Orlando
+                              - MetroArea.USA.Florida.Tallahassee
+                              - MetroArea.USA.Florida.WestPalmBeach
+                              - MetroArea.USA.Massachusetts.Boston
+                        - text:
+                            path: company.companyDetails.doziIndustries
+                            query:
+                              - healthservices.diagnostics
+                              - healthservices.rehab
+                              - hospitals
+                        - text:
+                            path: managementLevel
+                            query:
+                              - C-Level
+                              - VP-Level
+                              - Director
+                        - text:
+                            path: company.companyDetails.technologies
+                            query:
+                              - '22690'
+                              - '129362'
+                              - '49037'
+                              - '112'
+                      score:
+                        function:
+                          multiply:
+                            - add:
+                                - multiply:
+                                    - path:
+                                        value: orgChartTier
+                                    - constant: 0.009524
+                                    - path:
+                                        value: orgChartTier
+                                    - constant: 0.009524
+                                    - path:
+                                        value: orgChartTier
+                                    - constant: 0.009524
+                                    - path:
+                                        value: orgChartTier
+                                    - constant: 0.009524
+                                - multiply:
+                                    - path:
+                                        value: company.companyDetails.revenue
+                                    - constant: 0.000003
+                                - multiply:
+                                    - score: relevance
+                                    - constant: 3
+                            - gauss:
+                                path:
+                                  value: validDateMS
+                                  undefined: 1
+                                origin: 1675109605847
+                                offset: 2592000000
+                                scale: 2592000000
+                                decay: 0.5
+                - $limit: 25
+                - $addFields:
+                    person_score:
+                      $meta: searchScore
+                - $sort:
+                    person_score: -1
+                    company.companyId: -1
+                - $match:
+                    _id:
+                      $exists: true
+      - Duration: "1 minute"
+        Database: test
+        Operations:
+          - OperationMetricsName: query9
+            OperationName: RunCommand
+            OperationIsQuiet: true
+            OperationCommand:
+              aggregate: person2Company
+              cursor:
+                batchSize: 101
+              pipeline:
+                - $search:
+                    index: default
+                    returnStoredSource: true
+                    compound:
+                      must:
+                        - range:
+                            path: company.companyDetails.revenue
+                            gte: 25000
+                        - range:
+                            path: company.companyDetails.headcount
+                            gte: 50
+                        - range:
+                            path: confidenceScore
+                            gte: 98
+                            lte: 99
+                        - range:
+                            path: company.companyDetails.twoYearEmpGrowthScore
+                            gte: 50
+                      filter:
+                        - text:
+                            path: company.companyDetails.industry
+                            query:
+                              - Public
+                              - Private
+                              - Government
+                        - text:
+                            path: address.className
+                            query:
+                              - State.USA.Connecticut
+                              - State.USA.Florida
+                              - State.USA.Illinois
+                              - State.USA.Maine
+                              - State.USA.Massachusetts
+                              - State.USA.NewHampshire
+                              - State.USA.NewJersey
+                              - State.USA.NewYork
+                              - State.USA.Ohio
+                              - State.USA.Pennsylvania
+                              - State.USA.RhodeIsland
+                              - State.USA.Texas
+                              - MetroArea.USA.Connecticut.Hartford
+                              - MetroArea.USA.Florida.Gainesville
+                              - MetroArea.USA.Florida.Jacksonville
+                              - MetroArea.USA.Florida.Miami
+                              - MetroArea.USA.Florida.Orlando
+                              - MetroArea.USA.Florida.Tallahassee
+                              - MetroArea.USA.Florida.WestPalmBeach
+                              - MetroArea.USA.Massachusetts.Boston
+                        - text:
+                            path: company.companyDetails.doziIndustries
+                            query:
+                              - healthservices.diagnostics
+                              - healthservices.rehab
+                              - hospitals
+                        - text:
+                            path: managementLevel
+                            query:
+                              - C-Level
+                              - VP-Level
+                              - Director
+                        - text:
+                            path: company.companyDetails.technologies
+                            query:
+                              - '22690'
+                              - '129362'
+                              - '49037'
+                              - '112'
+                      score:
+                        function:
+                          multiply:
+                            - add:
+                                - multiply:
+                                    - path:
+                                        value: orgChartTier
+                                    - constant: 0.009524
+                                    - path:
+                                        value: orgChartTier
+                                    - constant: 0.009524
+                                    - path:
+                                        value: orgChartTier
+                                    - constant: 0.009524
+                                    - path:
+                                        value: orgChartTier
+                                    - constant: 0.009524
+                                - multiply:
+                                    - path:
+                                        value: company.companyDetails.revenue
+                                    - constant: 0.000003
+                                - multiply:
+                                    - score: relevance
+                                    - constant: 3
+                            - gauss:
+                                path:
+                                  value: validDateMS
+                                  undefined: 1
+                                origin: 1675109605847
+                                offset: 2592000000
+                                scale: 2592000000
+                                decay: 0.5
+                - $limit: 25
+                - $addFields:
+                    person_score:
+                      $meta: searchScore
+                - $sort:
+                    person_score: -1
+                    company.companyId: -1
+                - $match:
+                    _id:
+                      $exists: true
+
+      - Duration: "1 minute"
+        Database: test
+        Operations:
+          - OperationMetricsName: query10
+            OperationName: RunCommand
+            OperationIsQuiet: true
+            OperationCommand:
+              aggregate: person2Company
+              cursor:
+                batchSize: 101
+              pipeline:
+                - $search:
+                    index: default
+                    returnStoredSource: true
+                    compound:
+                      should:
+                        - text:
+                            path:
+                              - company.fullName
+                              - company.displayName
+                              - name.last
+                              - resumes.title.value
+                              - company.companyDetails.names.value
+                            query:
+                              - weber*
+                              - packaging*
+                              - solutions*
+                        - text:
+                            path: company.fullName
+                            query: weber
+                            score:
+                              function:
+                                multiply:
+                                  - score: relevance
+                                  - constant: 1000
+                        - text:
+                            path: resumes.title.value
+                            query: weber
+                            score:
+                              function:
+                                multiply:
+                                  - score: relevance
+                                  - constant: 10
+                        - text:
+                            path: company.fullName
+                            query: packaging
+                            score:
+                              function:
+                                multiply:
+                                  - score: relevance
+                                  - constant: 1000
+                        - text:
+                            path: resumes.title.value
+                            query: packaging
+                            score:
+                              function:
+                                multiply:
+                                  - score: relevance
+                                  - constant: 10
                 - $limit: 25
                 - $addFields:
                     person_score:
