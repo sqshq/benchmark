@@ -144,7 +144,7 @@ Actors:
                       $exists: true
 
       - Duration: "2 minutes"
-        Database: test
+        Database: poc_test
         Operations:
           - OperationMetricsName: query2
             OperationName: RunCommand
@@ -211,7 +211,7 @@ Actors:
                       $exists: true
 
       - Duration: "2 minutes"
-        Database: test
+        Database: poc_test
         Operations:
           - OperationMetricsName: query3
             OperationName: RunCommand
@@ -270,7 +270,7 @@ Actors:
                       $exists: true
 
       - Duration: "2 minutes"
-        Database: test
+        Database: poc_test
         Operations:
           - OperationMetricsName: query4
             OperationName: RunCommand
@@ -344,7 +344,7 @@ Actors:
                     _id:
                       $exists: true
       - Duration: "2 minutes"
-        Database: test
+        Database: poc_test
         Operations:
           - OperationMetricsName: query5
             OperationName: RunCommand
@@ -397,7 +397,7 @@ Actors:
                               - mfg.photo
                               - mfg.sport
                               - mfg.telecom
-                              - mfg.testequipment
+                              - mfg.poc_testequipment
                               - mfg.toys
                         - text:
                             path: managementLevel
@@ -415,7 +415,7 @@ Actors:
                     _id:
                       $exists: true
       - Duration: "2 minutes"
-        Database: test
+        Database: poc_test
         Operations:
           - OperationMetricsName: query6
             OperationName: RunCommand
@@ -492,7 +492,7 @@ Actors:
                     _id:
                       $exists: true
       - Duration: "2 minutes"
-        Database: test
+        Database: poc_test
         Operations:
           - OperationMetricsName: query7
             OperationName: RunCommand
@@ -2232,7 +2232,7 @@ Actors:
                       $exists: true
 
       - Duration: "2 minutes"
-        Database: test
+        Database: poc_test
         Operations:
           - OperationMetricsName: query8
             OperationName: RunCommand
@@ -2353,7 +2353,7 @@ Actors:
                     _id:
                       $exists: true
       - Duration: "2 minutes"
-        Database: test
+        Database: poc_test
         Operations:
           - OperationMetricsName: query9
             OperationName: RunCommand
@@ -2474,7 +2474,7 @@ Actors:
                       $exists: true
 
       - Duration: "2 minutes"
-        Database: test
+        Database: poc_test
         Operations:
           - OperationMetricsName: query10
             OperationName: RunCommand

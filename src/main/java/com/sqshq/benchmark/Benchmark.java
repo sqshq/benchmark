@@ -81,7 +81,7 @@ public class Benchmark {
                         .append("pipeline", pipeline)
                         .append("cursor", new BsonDocument());
                 var result = database.runCommand(command, BsonDocument.class);
-                if (ThreadLocalRandom.current().nextInt(0, 100) == 50) {
+                if (ThreadLocalRandom.current().nextInt(0, 25) == 10) {
                   System.out.printf(
                       "One of the queries result size was %s %n",
                       result.getDocument("cursor").getArray("firstBatch").size());
