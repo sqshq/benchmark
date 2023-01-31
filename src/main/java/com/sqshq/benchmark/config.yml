@@ -4,8 +4,8 @@ Actors:
     Type: RunCommand
     Threads: 1
     Phases:
-      - Duration: "1 minute"
-        Database: test
+      - Duration: "2 minutes"
+        Database: poc_test
         Operations:
           - OperationMetricsName: query1
             OperationName: RunCommand
@@ -143,7 +143,7 @@ Actors:
                     _id:
                       $exists: true
 
-      - Duration: "1 minute"
+      - Duration: "2 minutes"
         Database: test
         Operations:
           - OperationMetricsName: query2
@@ -210,7 +210,7 @@ Actors:
                     _id:
                       $exists: true
 
-      - Duration: "1 minute"
+      - Duration: "2 minutes"
         Database: test
         Operations:
           - OperationMetricsName: query3
@@ -269,7 +269,7 @@ Actors:
                     _id:
                       $exists: true
 
-      - Duration: "1 minute"
+      - Duration: "2 minutes"
         Database: test
         Operations:
           - OperationMetricsName: query4
@@ -343,7 +343,7 @@ Actors:
                 - $match:
                     _id:
                       $exists: true
-      - Duration: "1 minute"
+      - Duration: "2 minutes"
         Database: test
         Operations:
           - OperationMetricsName: query5
@@ -414,7 +414,7 @@ Actors:
                 - $match:
                     _id:
                       $exists: true
-      - Duration: "1 minute"
+      - Duration: "2 minutes"
         Database: test
         Operations:
           - OperationMetricsName: query6
@@ -491,7 +491,7 @@ Actors:
                 - $match:
                     _id:
                       $exists: true
-      - Duration: "1 minute"
+      - Duration: "2 minutes"
         Database: test
         Operations:
           - OperationMetricsName: query7
@@ -2231,7 +2231,7 @@ Actors:
                     _id:
                       $exists: true
 
-      - Duration: "1 minute"
+      - Duration: "2 minutes"
         Database: test
         Operations:
           - OperationMetricsName: query8
@@ -2352,7 +2352,7 @@ Actors:
                 - $match:
                     _id:
                       $exists: true
-      - Duration: "1 minute"
+      - Duration: "2 minutes"
         Database: test
         Operations:
           - OperationMetricsName: query9
@@ -2473,7 +2473,7 @@ Actors:
                     _id:
                       $exists: true
 
-      - Duration: "1 minute"
+      - Duration: "2 minutes"
         Database: test
         Operations:
           - OperationMetricsName: query10

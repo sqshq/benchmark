@@ -33,12 +33,13 @@ public class Benchmark {
         new ObjectMapper(new YAMLFactory())
             .configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
 
-    var reader =
-        Files.newBufferedReader(
-            Path.of(args[0]));
+    var reader = Files.newBufferedReader(Path.of(args[0]));
 
-    var mongoClient = MongoClients.create(MongoClientSettings.builder()
-        .applyConnectionString(new ConnectionString(args[1])).build());
+    var mongoClient =
+        MongoClients.create(
+            MongoClientSettings.builder()
+                .applyConnectionString(new ConnectionString(args[1]))
+                .build());
     var config = mapper.readValue(reader, Configuration.class);
     var metrics = new MetricRegistry();
 
@@ -51,42 +52,45 @@ public class Benchmark {
       var latch = new CountDownLatch(actor.Threads());
 
       for (int i = 0; i < actor.Threads(); i++) {
-        System.out.printf("Starting thread %s %n", i);
-        pool.submit(() -> {
 
-          int minutes = new Scanner(phase.Duration()).useDelimiter("\\D+").nextInt();
+        var operation = phase.Operations().get(0); // support only single operation for now
+        var database = mongoClient.getDatabase(phase.Database());
+        var collection = operation.OperationCommand().aggregate();
 
-          if (!phase.Duration().contains("minute")) {
-            throw new IllegalArgumentException("Duration is expected to be only in minutes");
-          }
+        System.out.printf("Starting thread %s for %s %n", i, operation.OperationMetricsName());
 
-          var endTime = Instant.now().plus(Duration.ofMinutes(minutes));
+        pool.submit(
+            () -> {
+              int minutes = new Scanner(phase.Duration()).useDelimiter("\\D+").nextInt();
 
-          while (Instant.now().isBefore(endTime)) {
-            var operation = phase.Operations().get(0); // support only single operation for now
-            var database = mongoClient.getDatabase(phase.Database());
-            var collection = operation.OperationCommand().aggregate();
+              if (!phase.Duration().contains("minute")) {
+                throw new IllegalArgumentException("Duration is expected to be only in minutes");
+              }
 
-            var pipeline =
-                BsonArray.parse(operation.OperationCommand().pipeline().toString());
+              var endTime = Instant.now().plus(Duration.ofMinutes(minutes));
 
-            var timer = metrics.timer(operation.OperationMetricsName());
-            var context = timer.time();
-            var command =
-                new BsonDocument()
-                    .append("aggregate", new BsonString(collection))
-                    .append("pipeline", pipeline)
-                    .append("cursor", new BsonDocument());
-            var result = database.runCommand(command, BsonDocument.class);
-            if (ThreadLocalRandom.current().nextInt(0, 100) == 50) {
-              System.out.printf("One of the queries result size was %s %n",
-                  result.getDocument("cursor").getArray("firstBatch").size());
-            }
-            context.stop();
-          }
+              while (Instant.now().isBefore(endTime)) {
 
-          latch.countDown();
-        });
+                var pipeline = BsonArray.parse(operation.OperationCommand().pipeline().toString());
+
+                var timer = metrics.timer(operation.OperationMetricsName());
+                var context = timer.time();
+                var command =
+                    new BsonDocument()
+                        .append("aggregate", new BsonString(collection))
+                        .append("pipeline", pipeline)
+                        .append("cursor", new BsonDocument());
+                var result = database.runCommand(command, BsonDocument.class);
+                if (ThreadLocalRandom.current().nextInt(0, 100) == 50) {
+                  System.out.printf(
+                      "One of the queries result size was %s %n",
+                      result.getDocument("cursor").getArray("firstBatch").size());
+                }
+                context.stop();
+              }
+
+              latch.countDown();
+            });
       }
 
       latch.await();
