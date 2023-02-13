@@ -80,13 +80,19 @@ public class Benchmark {
                         .append("aggregate", new BsonString(collection))
                         .append("pipeline", pipeline)
                         .append("cursor", new BsonDocument());
-                var result = database.runCommand(command, BsonDocument.class);
-                if (ThreadLocalRandom.current().nextInt(0, 25) == 10) {
-                  System.out.printf(
-                      "One of the queries result size was %s %n",
-                      result.getDocument("cursor").getArray("firstBatch").size());
+                try {
+                  var result = database.runCommand(command, BsonDocument.class);
+                  if (ThreadLocalRandom.current().nextInt(0, 25) == 10) {
+                    System.out.printf(
+                        "One of the queries result size was %s %n",
+                        result.getDocument("cursor").getArray("firstBatch").size());
+                  }
+
+                  System.out.println(Duration.ofNanos(context.stop()).toMillis() + " ms");
+
+                } catch (Exception e) {
+                  System.out.println(e);
                 }
-                context.stop();
               }
 
               latch.countDown();
